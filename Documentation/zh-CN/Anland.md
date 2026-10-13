@@ -154,3 +154,13 @@ Anland 是 Droidspaces 的可选 Wayland 显示方案。它通过一套缓冲区
 3. **运行 KDE Plasma 等桌面环境时，启用「允许用户命名空间」。**
 
    这是获得最佳性能的推荐设置。若不启用，KDE Plasma Wayland 可能出现明显卡顿或响应迟缓。Anland 本身不需要特权模式，也无需启用 `noseccomp`、`nomask` 或其他特权选项。
+
+### broker 套接字
+
+broker 监听的 host 套接字以容器名命名：
+
+```text
+/data/local/Droidspaces/Net/anland-<容器名>.sock
+```
+
+容器名中的空格会替换为短横线。容器状态会把该路径作为 `anland_sock` 上报，**Launch** 按钮即用它连接 Anland 应用。由于名称完全由容器名推导，外部脚本可以自行拼出同一路径并交给 Anland 消费端，无需经过 Droidspaces 应用。

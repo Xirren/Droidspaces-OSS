@@ -127,6 +127,16 @@ On the CLI, enable Anland with `--anland` or the `enable_anland` config key.
 
 Start the container, then tap its card on the **Panel** tab to open the container details. The **Anland** card below **Terminal** has a **Launch** button that opens the desktop in the Anland app. The button becomes active when the container starts and Droidspaces records the broker socket. The desktop appears after the compositor inside the container starts.
 
+### The broker socket
+
+The broker listens on a host socket named after the container:
+
+```text
+/data/local/Droidspaces/Net/anland-<container name>.sock
+```
+
+Spaces in the container name become dashes. The container status reports this path as `anland_sock`, and the **Launch** button connects the consumer app to it. Because the name is derived from the container name alone, an external script can build the same path and hand it to the Anland consumer without going through the Droidspaces app.
+
 ---
 
 Previous: [Display, audio and desktop](Graphics-and-Audio.md) | Next: [Kernel configuration](Kernel-Configuration.md)

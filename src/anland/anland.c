@@ -117,23 +117,25 @@ int ds_anland_daemon_start(struct ds_config *cfg) {
    * socket there could be swapped for a symlink before the chmod and the bind
    * mount below, both of which follow symlinks as root. The directory is 0755,
    * so the consumer can still reach the socket. */
-  char uuid[DS_UUID_LEN + 1];
-  if (generate_uuid(uuid, sizeof(uuid)) < 0) {
-    ds_error("[Anland] failed to generate socket name");
+  /* The socket is named after the container, not a random UUID, so a script
+   * can derive the path from the container name alone. A predictable name is
+   * fine here: the Net directory is root-only-writable, and the broker gates
+   * access on peer credentials, not on the path being unguessable. */
+  char safe[NAME_MAX + 1];
+  sanitize_container_name(cfg->container_name, safe, sizeof(safe));
+  if (snprintf(cfg->anland_sock, sizeof(cfg->anland_sock), "%s/anland-%s.sock",
+               get_net_dir(), safe) >= (int)sizeof(cfg->anland_sock)) {
+    ds_error("[Anland] container name too long for the socket path");
     return -1;
   }
-  snprintf(cfg->anland_sock, sizeof(cfg->anland_sock), "%s/anland-%s.sock",
-           get_net_dir(), uuid);
 
   ds_log("[Anland] launching display daemon on %s", cfg->anland_sock);
 
   /* The log relay resolves its file relative to get_logs_dir() and creates
    * only the final component; the container's own log directory is already
    * there from ds_open_container_log. */
-  char safe_log_name[NAME_MAX + 1], log_rel[NAME_MAX + 16];
-  sanitize_container_name(cfg->container_name, safe_log_name,
-                          sizeof(safe_log_name));
-  snprintf(log_rel, sizeof(log_rel), "%s/anland", safe_log_name);
+  char log_rel[NAME_MAX + 16];
+  snprintf(log_rel, sizeof(log_rel), "%s/anland", safe);
 
   pid_t child = ds_spawn_daemon(anland_child, cfg->anland_sock, log_rel,
                                 "anland", "Anland");
